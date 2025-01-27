@@ -1,0 +1,107 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Details</title>
+</head>
+<body>
+  <h1>Order Management</h1>
+  
+  <form id="orderForm">
+    <label for="orderId">Order ID:</label>
+    <input type="text" id="orderId" placeholder="Enter Order ID" required />
+    <br />
+
+    <label for="agentName">Agent Name:</label>
+    <input type="text" id="agentName" placeholder="Enter Agent Name" />
+    <br />
+
+    <label for="agentRemark">Agent Remark 1:</label>
+    <input type="text" id="agentRemark" placeholder="Enter Agent Remark" />
+    <br />
+
+    <label for="attemptNumber">Attempt Number:</label>
+    <input type="text" id="attemptNumber" placeholder="Enter Attempt Number" />
+    <br />
+
+    <button type="button" onclick="fetchOrderDetails()">Fetch Order Details</button>
+    <button type="button" onclick="submitOrderUpdates()">Submit Updates</button>
+  </form>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLlKoTRtw5NxOJbD8b3k0llFVEQmgLEZ95XfB4Lq05ZEuIzUXPZefBfvfqkk_qVZdd/exec"; // Replace with your Apps Script URL
+
+    // Fetch order details based on Order ID
+    async function fetchOrderDetails() {
+      const orderId = document.getElementById("orderId").value.trim();
+      if (!orderId) {
+        alert("Please enter an Order ID.");
+        return;
+      }
+
+      try {
+        const response = await fetch(`${SCRIPT_URL}?orderId=${orderId}`);
+        const data = await response.json();
+
+        if (data.error) {
+          alert(`Error: ${data.error}`);
+          return;
+        }
+
+        // Populate form fields with the fetched data
+        document.getElementById("agentName").value = data["AGENT NAME"] || "";
+        document.getElementById("agentRemark").value = data["AGENT REMARK 1"] || "";
+        document.getElementById("attemptNumber").value = data["ATEEMPT NUMBER"] || "";
+        alert("Order details fetched successfully.");
+      } catch (error) {
+        console.error("Error fetching order details:", error);
+        alert("An error occurred while fetching order details.");
+      }
+    }
+
+    // Submit updates to the server
+    async function submitOrderUpdates() {
+      const orderId = document.getElementById("orderId").value.trim();
+      const agentName = document.getElementById("agentName").value.trim();
+      const agentRemark = document.getElementById("agentRemark").value.trim();
+      const attemptNumber = document.getElementById("attemptNumber").value.trim();
+
+      if (!orderId) {
+        alert("Order ID is required.");
+        return;
+      }
+
+      const payload = {
+        orderId,
+        agentName,
+        agentRemark,
+        attemptNumber,
+      };
+
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        const result = await response.json();
+
+        if (result.error) {
+          alert(`Error: ${result.error}`);
+          return;
+        }
+
+        alert("Order details updated successfully.");
+      } catch (error) {
+        console.error("Error submitting updates:", error);
+        alert("An error occurred while submitting updates.");
+      }
+    }
+  </script>
+</body>
+</html>
