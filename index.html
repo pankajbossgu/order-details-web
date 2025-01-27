@@ -1,37 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Lookup</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 0;
-      padding: 20px;
-      text-align: center;
-      background-color: #f5f5f5;
-    }
-    h1 {
-      color: #333;
-    }
-    input, button {
-      margin: 10px;
-      padding: 10px;
-      font-size: 16px;
-    }
-    #result {
-      margin-top: 20px;
-      padding: 20px;
-      background-color: #fff;
-      border: 1px solid #ddd;
-      display: inline-block;
-    }
-    #result p {
-      margin: 5px 0;
-    }
-  </style>
-</head>
 <body>
   <h1>Order Details Lookup</h1>
   <input type="text" id="orderId" placeholder="Enter Order ID">
@@ -39,7 +5,7 @@
   <div id="result"></div>
 
   <script>
-    const webAppURL = "https://script.google.com/macros/s/AKfycbwANNOftVDleSvGgNXMuCxmge3c6THbGdoMq4SaE0Kv83YebTogN6IdQ3zqowllYDxJBA/exec"; // Replace with your web app URL
+    const webAppURL = "https://script.google.com/macros/s/AKfycbz_-0fPNGDxbZj1R2H3JzmmDet3KL5WMcxE3-KG1HTC74nkR4fWPsJHdIguXyNY16xj/exec";
 
     async function fetchOrderDetails() {
       const orderId = document.getElementById("orderId").value.trim();
@@ -49,24 +15,62 @@
         return;
       }
 
-      try {
-        const response = await fetch(`${webAppURL}?orderId=${orderId}`);
-        const data = await response.json();
+      const response = await fetch(`${webAppURL}?orderId=${orderId}`);
+      const data = await response.json();
 
-        if (data.success) {
-          const result = data.result;
-          document.getElementById("result").innerHTML = `
-            <p><strong>Order ID:</strong> ${result.orderId}</p>
-            <p><strong>Status:</strong> ${result.status}</p>
-            <p><strong>Message:</strong> ${result.message}</p>
-          `;
-        } else {
-          document.getElementById("result").innerText = "Order not found or an error occurred.";
-        }
-      } catch (error) {
-        document.getElementById("result").innerText = `Error: ${error.message}`;
+      if (data.error) {
+        document.getElementById("result").innerText = data.error;
+        return;
       }
+
+      document.getElementById("result").innerHTML = `
+        <div>
+          <p><b>Order ID:</b> ${data["ORDER ID"]}</p>
+          <p><b>Customer Name:</b> ${data["CUSTOMER NAME"]}</p>
+          <p><b>Address:</b> ${data["ADDRESS"]}</p>
+          <label for="agentName">Agent Name:</label>
+          <select id="agentName">
+            <option>${data["AGENT NAME"] || "Select"}</option>
+            <option>Agent A</option>
+            <option>Agent B</option>
+          </select>
+          <br>
+          <label for="agentRemark">Agent Remark:</label>
+          <select id="agentRemark">
+            <option>${data["AGENT REMARK 1"] || "Select"}</option>
+            <option>Remark A</option>
+            <option>Remark B</option>
+          </select>
+          <br>
+          <label for="attemptNumber">Attempt Number:</label>
+          <select id="attemptNumber">
+            <option>${data["ATEEMPT NUMBER"] || "Select"}</option>
+            <option>1</option>
+            <option>2</option>
+          </select>
+          <br>
+          <button onclick="submitUpdate('${data["ORDER ID"]}')">Submit</button>
+        </div>
+      `;
+    }
+
+    async function submitUpdate(orderId) {
+      const agentName = document.getElementById("agentName").value;
+      const agentRemark = document.getElementById("agentRemark").value;
+      const attemptNumber = document.getElementById("attemptNumber").value;
+
+      const response = await fetch(webAppURL, {
+        method: "POST",
+        body: JSON.stringify({
+          orderId,
+          agentName,
+          agentRemark,
+          attemptNumber,
+        }),
+      });
+
+      const result = await response.json();
+      alert(result.success ? "Update successful!" : result.error);
     }
   </script>
 </body>
-</html>
