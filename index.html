@@ -1,0 +1,117 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Details</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .message {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+    }
+    .message.success {
+      background-color: #d4edda;
+      color: #155724;
+    }
+    .message.error {
+      background-color: #f8d7da;
+      color: #721c24;
+    }
+    #details {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #f1f1f1;
+      border-radius: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Order Details</h1>
+    <input type="text" id="orderId" placeholder="Enter Order ID">
+    <button id="getDetails">Get Details</button>
+    <div id="message" class="message"></div>
+    <div id="details"></div>
+  </div>
+  <script>
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbz1zRfGqEGtDjA7LF1PFaynRrYeRGhuK_bDkZg0K-PRJvj04r2ADFWJLU-J-NYR_0PZOA/exec';
+
+    document.getElementById('getDetails').addEventListener('click', async () => {
+      const orderId = document.getElementById('orderId').value;
+      const messageDiv = document.getElementById('message');
+      const detailsDiv = document.getElementById('details');
+
+      // Reset messages
+      messageDiv.style.display = 'none';
+      detailsDiv.style.display = 'none';
+
+      if (!orderId) {
+        messageDiv.textContent = 'Please enter an Order ID.';
+        messageDiv.className = 'message error';
+        messageDiv.style.display = 'block';
+        return;
+      }
+
+      try {
+        const response = await fetch(`${webAppUrl}?orderId=${encodeURIComponent(orderId)}`);
+        const data = await response.json();
+
+        if (data.success) {
+          detailsDiv.innerHTML = `<strong>Order Details:</strong><br>${JSON.stringify(data.details, null, 2)}`;
+          detailsDiv.style.display = 'block';
+        } else {
+          messageDiv.textContent = 'Order not found.';
+          messageDiv.className = 'message error';
+          messageDiv.style.display = 'block';
+        }
+      } catch (error) {
+        messageDiv.textContent = 'Failed to fetch order details.';
+        messageDiv.className = 'message error';
+        messageDiv.style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
