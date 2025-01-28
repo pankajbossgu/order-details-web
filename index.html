@@ -1,106 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Details</title>
-</head>
-<body>
-  <h1>Order Management</h1>
-  
-  <form id="orderForm">
-    <label for="orderId">Order ID:</label>
-    <input type="text" id="orderId" placeholder="Enter Order ID" required />
-    <br />
-
-    <label for="agentName">Agent Name:</label>
-    <input type="text" id="agentName" placeholder="Enter Agent Name" />
-    <br />
-
-    <label for="agentRemark">Agent Remark 1:</label>
-    <input type="text" id="agentRemark" placeholder="Enter Agent Remark" />
-    <br />
-
-    <label for="attemptNumber">Attempt Number:</label>
-    <input type="text" id="attemptNumber" placeholder="Enter Attempt Number" />
-    <br />
-
-    <button type="button" onclick="fetchOrderDetails()">Fetch Order Details</button>
-    <button type="button" onclick="submitOrderUpdates()">Submit Updates</button>
-  </form>
-
-  <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzLlKoTRtw5NxOJbD8b3k0llFVEQmgLEZ95XfB4Lq05ZEuIzUXPZefBfvfqkk_qVZdd/exec"; // Replace with your Apps Script URL
-
-    // Fetch order details based on Order ID
-    async function fetchOrderDetails() {
-      const orderId = document.getElementById("orderId").value.trim();
-      if (!orderId) {
-        alert("Please enter an Order ID.");
-        return;
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Management - NXTLIFT PVT. LTD.</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Arial', sans-serif;
       }
+      body {
+        background-color: #f9f9f9;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      .container {
+        background: #ffffff;
+        width: 100%;
+        max-width: 600px;
+        padding: 30px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 12px;
+      }
+      header {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      header h1 {
+        color: #333;
+        font-size: 24px;
+        text-transform: uppercase;
+      }
+      header .brand {
+        font-size: 18px;
+        color: #007bff;
+        font-weight: bold;
+      }
+      form {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+      label {
+        color: #555;
+        font-weight: bold;
+      }
+      input[type="text"],
+      select {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        width: 100%;
+      }
+      .buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      button {
+        padding: 10px 15px;
+        background: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: background 0.3s;
+        width: 48%;
+      }
+      button:hover {
+        background: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>Order Management</h1>
+        <div class="brand">NXTLIFT PVT. LTD.</div>
+      </header>
+      <form id="order-form">
+        <label for="orderId">Order ID:</label>
+        <input type="text" id="orderId" name="orderId" required />
 
-      try {
-        const response = await fetch(`${SCRIPT_URL}?orderId=${orderId}`);
-        const data = await response.json();
+        <label for="agentName">Agent Name:</label>
+        <input type="text" id="agentName" name="agentName" />
 
-        if (data.error) {
-          alert(`Error: ${data.error}`);
+        <label for="agentRemark">Agent Remark 1:</label>
+        <input type="text" id="agentRemark" name="agentRemark" />
+
+        <label for="attemptNumber">Attempt Number:</label>
+        <input type="text" id="attemptNumber" name="attemptNumber" />
+
+        <div class="buttons">
+          <button type="button" id="fetchButton">Fetch Order Details</button>
+          <button type="submit" id="submitButton">Submit Updates</button>
+        </div>
+      </form>
+    </div>
+    <script>
+      const apiUrl = "https://script.google.com/macros/s/AKfycbzLlKoTRtw5NxOJbD8b3k0llFVEQmgLEZ95XfB4Lq05ZEuIzUXPZefBfvfqkk_qVZdd/exec";
+      
+      document.getElementById("fetchButton").addEventListener("click", async () => {
+        const orderId = document.getElementById("orderId").value.trim();
+        if (!orderId) {
+          alert("Please enter an Order ID.");
+          return;
+        }
+        try {
+          const response = await fetch(`${apiUrl}?orderId=${orderId}`);
+          const data = await response.json();
+
+          if (data.error) {
+            alert(data.error);
+          } else {
+            document.getElementById("agentName").value = data["AGENT NAME"] || "";
+            document.getElementById("agentRemark").value = data["AGENT REMARK 1"] || "";
+            document.getElementById("attemptNumber").value = data["ATEEMPT NUMBER"] || "";
+          }
+        } catch (error) {
+          alert("Failed to fetch order details.");
+          console.error(error);
+        }
+      });
+
+      document.getElementById("order-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+
+        const orderId = document.getElementById("orderId").value.trim();
+        const agentName = document.getElementById("agentName").value.trim();
+        const agentRemark = document.getElementById("agentRemark").value.trim();
+        const attemptNumber = document.getElementById("attemptNumber").value.trim();
+
+        if (!orderId) {
+          alert("Order ID is required.");
           return;
         }
 
-        // Populate form fields with the fetched data
-        document.getElementById("agentName").value = data["AGENT NAME"] || "";
-        document.getElementById("agentRemark").value = data["AGENT REMARK 1"] || "";
-        document.getElementById("attemptNumber").value = data["ATEEMPT NUMBER"] || "";
-        alert("Order details fetched successfully.");
-      } catch (error) {
-        console.error("Error fetching order details:", error);
-        alert("An error occurred while fetching order details.");
-      }
-    }
+        const payload = {
+          orderId,
+          agentName,
+          agentRemark,
+          attemptNumber,
+        };
 
-    // Submit updates to the server
-    async function submitOrderUpdates() {
-      const orderId = document.getElementById("orderId").value.trim();
-      const agentName = document.getElementById("agentName").value.trim();
-      const agentRemark = document.getElementById("agentRemark").value.trim();
-      const attemptNumber = document.getElementById("attemptNumber").value.trim();
+        try {
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(payload),
+          });
+          const data = await response.json();
 
-      if (!orderId) {
-        alert("Order ID is required.");
-        return;
-      }
-
-      const payload = {
-        orderId,
-        agentName,
-        agentRemark,
-        attemptNumber,
-      };
-
-      try {
-        const response = await fetch(SCRIPT_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-
-        const result = await response.json();
-
-        if (result.error) {
-          alert(`Error: ${result.error}`);
-          return;
+          if (data.error) {
+            alert(data.error);
+          } else {
+            alert("Order details updated successfully.");
+          }
+        } catch (error) {
+          alert("Failed to submit order updates.");
+          console.error(error);
         }
-
-        alert("Order details updated successfully.");
-      } catch (error) {
-        console.error("Error submitting updates:", error);
-        alert("An error occurred while submitting updates.");
-      }
-    }
-  </script>
-</body>
+      });
+    </script>
+  </body>
 </html>
