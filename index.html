@@ -1,169 +1,100 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Order Details Lookup - NXTLIFT MARKETING SOLUTION PVT. LTD.</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        background-color: #f8f9fa;
-        margin: 0;
-        padding: 0;
-      }
-      header {
-        background-color: #007bff;
-        color: white;
-        padding: 20px;
-        text-align: center;
-        font-size: 24px;
-        font-weight: bold;
-      }
-      main {
-        padding: 20px;
-        max-width: 600px;
-        margin: 20px auto;
-        background-color: white;
-        border-radius: 8px;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-      }
-      input[type="text"],
-      select {
-        width: 100%;
-        padding: 10px;
-        margin: 10px 0;
-        border: 1px solid #ced4da;
-        border-radius: 4px;
-      }
-      button {
-        background-color: #007bff;
-        color: white;
-        border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
-        cursor: pointer;
-        width: 100%;
-        font-size: 16px;
-      }
-      button:hover {
-        background-color: #0056b3;
-      }
-      #result {
-        margin-top: 20px;
-        font-size: 14px;
-        line-height: 1.6;
-      }
-      p {
-        margin: 5px 0;
-      }
-    </style>
-  </head>
-  <body>
-    <header>
-      NXTLIFT MARKETING SOLUTION PVT. LTD.
-    </header>
-    <main>
-      <h2>Order Details Lookup</h2>
-      <input type="text" id="orderId" placeholder="Enter Order ID" />
-      <button onclick="fetchOrderDetails()">Get Details</button>
-      <div id="result"></div>
-    </main>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Management Form</title>
+  <script>
+    const deploymentUrl = "https://script.google.com/macros/s/AKfycbxvEzr2_Nx2uj-ONIZPf5ZMd_JbQpES7AbCJSJLf5M9nHy66tJxr9NBBvIxPLWecxja7A/exec";
 
-    <script>
-      const webAppURL =
-        "https://script.google.com/macros/s/AKfycbxvEzr2_Nx2uj-ONIZPf5ZMd_JbQpES7AbCJSJLf5M9nHy66tJxr9NBBvIxPLWecxja7A/exec";
+    async function fetchOrderData() {
+      const orderId = document.getElementById("orderId").value;
+      if (!orderId) {
+        alert("Please enter an Order ID.");
+        return;
+      }
 
-      async function fetchOrderDetails() {
-        const orderId = document.getElementById("orderId").value.trim();
-
-        if (!orderId) {
-          document.getElementById("result").innerText = "Please enter an Order ID.";
-          return;
+      try {
+        const response = await fetch(`${deploymentUrl}?orderId=${orderId}`);
+        const data = await response.json();
+        if (data.error) {
+          alert(data.error);
+        } else {
+          document.getElementById("orderData").innerText = JSON.stringify(data, null, 2);
         }
+      } catch (error) {
+        alert("Error fetching order data.");
+        console.error(error);
+      }
+    }
 
-        try {
-          const response = await fetch(`${webAppURL}?orderId=${orderId}`);
-          const data = await response.json();
+    async function submitOrderUpdate() {
+      const orderId = document.getElementById("orderId").value;
+      const agentName = document.getElementById("agentName").value;
+      const agentRemark = document.getElementById("agentRemark").value;
+      const attemptNumber = document.getElementById("attemptNumber").value;
 
-          if (data.error) {
-            document.getElementById("result").innerText = data.error;
-            return;
-          }
-
-          const dropdownData = await fetchDropdownValues();
-
-          document.getElementById("result").innerHTML = `
-            <div>
-              <p><b>Order ID:</b> ${data["ORDER ID"]}</p>
-              <p><b>Customer Name:</b> ${data["CUSTOMER NAME"]}</p>
-              <p><b>Address:</b> ${data["ADDRESS"]}</p>
-              <label for="agentName">Agent Name:</label>
-              <select id="agentName">
-                <option>${data["AGENT NAME"] || "Select"}</option>
-                ${dropdownData.agentNames
-                  .map((name) => `<option>${name}</option>`)
-                  .join("")}
-              </select>
-              <br />
-              <label for="agentRemark">Agent Remark:</label>
-              <select id="agentRemark">
-                <option>${data["AGENT REMARK 1"] || "Select"}</option>
-                ${dropdownData.agentRemarks
-                  .map((remark) => `<option>${remark}</option>`)
-                  .join("")}
-              </select>
-              <br />
-              <label for="attemptNumber">Attempt Number:</label>
-              <select id="attemptNumber">
-                <option>${data["ATEEMPT NUMBER"] || "Select"}</option>
-                ${dropdownData.attemptNumbers
-                  .map((number) => `<option>${number}</option>`)
-                  .join("")}
-              </select>
-              <br />
-              <button onclick="submitUpdate('${data["ORDER ID"]}')">Submit</button>
-            </div>
-          `;
-        } catch (error) {
-          document.getElementById("result").innerText =
-            "Error fetching order details.";
-          console.error(error);
-        }
+      if (!orderId || !agentName || !agentRemark || !attemptNumber) {
+        alert("Please fill in all fields.");
+        return;
       }
 
-      async function fetchDropdownValues() {
-        try {
-          const response = await fetch(`${webAppURL}?dropdown=true`);
-          return await response.json();
-        } catch (error) {
-          console.error("Error fetching dropdown values:", error);
-          return { agentNames: [], agentRemarks: [], attemptNumbers: [] };
+      const payload = { orderId, agentName, agentRemark, attemptNumber };
+
+      try {
+        const response = await fetch(deploymentUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        if (result.error) {
+          alert(result.error);
+        } else {
+          alert("Order data updated successfully!");
         }
+      } catch (error) {
+        alert("Error updating order data.");
+        console.error(error);
       }
+    }
 
-      async function submitUpdate(orderId) {
-        const agentName = document.getElementById("agentName").value;
-        const agentRemark = document.getElementById("agentRemark").value;
-        const attemptNumber = document.getElementById("attemptNumber").value;
+    async function loadDropdowns() {
+      try {
+        const response = await fetch(`${deploymentUrl}?action=dropdowns`);
+        const dropdownData = await response.json();
 
-        try {
-          const response = await fetch(webAppURL, {
-            method: "POST",
-            body: JSON.stringify({
-              orderId,
-              agentName,
-              agentRemark,
-              attemptNumber,
-            }),
-          });
-
-          const result = await response.json();
-          alert(result.success ? "Update successful!" : result.error);
-        } catch (error) {
-          alert("Error updating order details.");
-          console.error(error);
-        }
+        populateDropdown("agentName", dropdownData.agentNames);
+        populateDropdown("agentRemark", dropdownData.agentRemarks);
+        populateDropdown("attemptNumber", dropdownData.attemptNumbers);
+      } catch (error) {
+        alert("Error loading dropdown data.");
+        console.error(error);
       }
-    </script>
-  </body>
-</html>
+    }
+
+    function populateDropdown(elementId, options) {
+      const dropdown = document.getElementById(elementId);
+      dropdown.innerHTML = options.map(option => `<option value="${option}">${option}</option>`).join("");
+    }
+
+    window.onload = loadDropdowns;
+  </script>
+</head>
+<body>
+  <h1>Order Management Form</h1>
+
+  <label for="orderId">Order ID:</label>
+  <input type="text" id="orderId" name="orderId"><br><br>
+
+  <label for="agentName">Agent Name:</label>
+  <select id="agentName"></select><br><br>
+
+  <label for="agentRemark">Agent Remark:</label>
+  <select id="agentRemark"></select><br><br>
+
+  <label for="attemptNumber">Attempt Number:</label>
+  <select id="attemptNumber"></select><br><br>
+
+  <button onclick="fetchOrderData()">Fetch Order Data</but
