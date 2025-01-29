@@ -1,119 +1,102 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Order Management System</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background-color: #f9f9f9;
-    }
-    .form-group {
-      margin-bottom: 15px;
-    }
-    label {
-      display: block;
-      margin-bottom: 5px;
-    }
-    select, input {
-      width: 100%;
-      padding: 8px;
-      box-sizing: border-box;
-    }
-    button {
-      background-color: #4CAF50;
-      color: white;
-      padding: 10px 15px;
-      border: none;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
-    }
-  </style>
-</head>
-<body>
-  <h1>Order Management System</h1>
-  <form id="order-form">
-    <div class="form-group">
-      <label for="orderId">Order ID:</label>
-      <input type="text" id="orderId" name="orderId" required>
-    </div>
+<html>
+  <head>
+    <title>Order Details Lookup</title>
+  </head>
+  <body>
+    <h1>Order Details Lookup</h1>
+    <input type="text" id="orderId" placeholder="Enter Order ID">
+    <button onclick="fetchOrderDetails()">Get Details</button>
+    <div id="result"></div>
 
-    <div class="form-group">
-      <label for="agentName">Agent Name:</label>
-      <select id="agentName" name="agentName" required></select>
-    </div>
+    <script>
+      const webAppURL = "https://script.google.com/macros/s/AKfycbxvEzr2_Nx2uj-ONIZPf5ZMd_JbQpES7AbCJSJLf5M9nHy66tJxr9NBBvIxPLWecxja7A/exec";
 
-    <div class="form-group">
-      <label for="agentRemark">Agent Remark:</label>
-      <select id="agentRemark" name="agentRemark" required></select>
-    </div>
+      async function fetchOrderDetails() {
+        const orderId = document.getElementById("orderId").value.trim();
 
-    <div class="form-group">
-      <label for="attemptNumber">Attempt Number:</label>
-      <select id="attemptNumber" name="attemptNumber" required></select>
-    </div>
+        if (!orderId) {
+          document.getElementById("result").innerText = "Please enter an Order ID.";
+          return;
+        }
 
-    <button type="submit">Update Order</button>
-  </form>
+        try {
+          const response = await fetch(`${webAppURL}?orderId=${orderId}`);
+          const data = await response.json();
 
-  <div id="result"></div>
+          if (data.error) {
+            document.getElementById("result").innerText = data.error;
+            return;
+          }
 
-  <script>
-    const apiUrl = "https://script.google.com/macros/s/AKfycbxvEzr2_Nx2uj-ONIZPf5ZMd_JbQpES7AbCJSJLf5M9nHy66tJxr9NBBvIxPLWecxja7A/exec";
+          // Fetch dropdown options
+          const dropdownData = await fetchDropdownValues();
 
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        const response = await fetch(`${apiUrl}?action=getDropdownData`);
-        const dropdownData = await response.json();
-
-        populateDropdown("agentName", dropdownData.agentNames);
-        populateDropdown("agentRemark", dropdownData.agentRemarks);
-        populateDropdown("attemptNumber", dropdownData.attemptNumbers);
-      } catch (error) {
-        console.error("Error fetching dropdown data:", error);
+          document.getElementById("result").innerHTML = `
+            <div>
+              <p><b>Order ID:</b> ${data["ORDER ID"]}</p>
+              <p><b>Customer Name:</b> ${data["CUSTOMER NAME"]}</p>
+              <p><b>Address:</b> ${data["ADDRESS"]}</p>
+              <label for="agentName">Agent Name:</label>
+              <select id="agentName">
+                <option>${data["AGENT NAME"] || "Select"}</option>
+                ${dropdownData.agentNames.map(name => `<option>${name}</option>`).join('')}
+              </select>
+              <br>
+              <label for="agentRemark">Agent Remark:</label>
+              <select id="agentRemark">
+                <option>${data["AGENT REMARK 1"] || "Select"}</option>
+                ${dropdownData.agentRemarks.map(remark => `<option>${remark}</option>`).join('')}
+              </select>
+              <br>
+              <label for="attemptNumber">Attempt Number:</label>
+              <select id="attemptNumber">
+                <option>${data["ATEEMPT NUMBER"] || "Select"}</option>
+                ${dropdownData.attemptNumbers.map(number => `<option>${number}</option>`).join('')}
+              </select>
+              <br>
+              <button onclick="submitUpdate('${data["ORDER ID"]}')">Submit</button>
+            </div>
+          `;
+        } catch (error) {
+          document.getElementById("result").innerText = "Error fetching order details.";
+          console.error(error);
+        }
       }
-    });
 
-    function populateDropdown(elementId, options) {
-      const select = document.getElementById(elementId);
-      options.forEach(option => {
-        const opt = document.createElement("option");
-        opt.value = option;
-        opt.textContent = option;
-        select.appendChild(opt);
-      });
-    }
-
-    document.getElementById("order-form").addEventListener("submit", async (event) => {
-      event.preventDefault();
-
-      const orderId = document.getElementById("orderId").value;
-      const agentName = document.getElementById("agentName").value;
-      const agentRemark = document.getElementById("agentRemark").value;
-      const attemptNumber = document.getElementById("attemptNumber").value;
-
-      const requestData = { orderId, agentName, agentRemark, attemptNumber };
-
-      try {
-        const response = await fetch(apiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(requestData)
-        });
-
-        const result = await response.json();
-
-        document.getElementById("result").textContent = result.success
-          ? `Order updated successfully. Row: ${result.updatedRow}`
-          : `Error: ${result.error}`;
-      } catch (error) {
-        document.getElementById("result").textContent = `Error updating order: ${error.message}`;
+      async function fetchDropdownValues() {
+        try {
+          const response = await fetch(`${webAppURL}?dropdown=true`);
+          return await response.json();
+        } catch (error) {
+          console.error("Error fetching dropdown values:", error);
+          return { agentNames: [], agentRemarks: [], attemptNumbers: [] };
+        }
       }
-    });
-  </script>
-</body>
+
+      async function submitUpdate(orderId) {
+        const agentName = document.getElementById("agentName").value;
+        const agentRemark = document.getElementById("agentRemark").value;
+        const attemptNumber = document.getElementById("attemptNumber").value;
+
+        try {
+          const response = await fetch(webAppURL, {
+            method: "POST",
+            body: JSON.stringify({
+              orderId,
+              agentName,
+              agentRemark,
+              attemptNumber,
+            }),
+          });
+
+          const result = await response.json();
+          alert(result.success ? "Update successful!" : result.error);
+        } catch (error) {
+          alert("Error updating order details.");
+          console.error(error);
+        }
+      }
+    </script>
+  </body>
 </html>
