@@ -1,131 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NXTLIFT Order Details Lookup</title>
-    <style>
-      body {
-        font-family: "Arial", sans-serif;
-        background: #f0f4f8;
-        padding: 40px;
-        max-width: 800px;
-        margin: 0 auto;
-        text-align: center;
-      }
-      h1 {
-        color: #007bff;
-        text-align: center;
-      }
-      input, select, button {
-        width: 100%;
-        padding: 12px;
-        margin: 10px 0;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-      }
-      button {
-        background-color: #007bff;
-        color: white;
-        cursor: pointer;
-        border: none;
-      }
-      button:hover {
-        background-color: #0056b3;
-      }
-      #result {
-        margin-top: 20px;
-        background-color: #fff;
-        padding: 15px;
-        text-align: left;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>NXTLIFT Marketing Solutions Pvt. Ltd.</h1>
-    <h2>Order Details Lookup</h2>
-    <input type="text" id="orderId" placeholder="Enter Order ID">
-    <button onclick="fetchOrderDetails()">Get Details</button>
-    <div id="result"></div>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Details - NXTLIFT Marketing Solution Pvt. Ltd.</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      padding: 30px;
+      max-width: 800px;
+      margin: auto;
+    }
+    h1 {
+      color: #007BFF;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+    select, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+    }
+    button {
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      background-color: #fff;
+      padding: 15px;
+      margin-top: 20px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>NXTLIFT Marketing Solution Pvt. Ltd.</h1>
 
-    <script>
-      const webAppURL = "https://script.google.com/macros/s/AKfycbz2H8jdqnXZUxexaHpMY2I9i-3aJnA-cB8Fx5ZF7tEfufS8U2zeiK5M2MfLAV1VhRe5qA/exec";
+  <label for="orderId">Enter Order ID:</label>
+  <input type="text" id="orderId" placeholder="Enter Order ID">
+  <button onclick="fetchOrderDetails()">Get Details</button>
 
-      async function fetchOrderDetails() {
-        const orderId = document.getElementById("orderId").value.trim();
-        if (!orderId) {
-          document.getElementById("result").innerText = "Please enter an Order ID.";
+  <div id="result" class="result"></div>
+
+  <script>
+    const webAppURL = "https://script.google.com/macros/s/AKfycbz2H8jdqnXZUxexaHpMY2I9i-3aJnA-cB8Fx5ZF7tEfufS8U2zeiK5M2MfLAV1VhRe5qA/exec";
+
+    async function fetchOrderDetails() {
+      const orderId = document.getElementById("orderId").value.trim();
+
+      if (!orderId) {
+        document.getElementById("result").innerHTML = "<p style='color: red;'>Please enter an Order ID.</p>";
+        return;
+      }
+
+      try {
+        const response = await fetch(`${webAppURL}?orderId=${orderId}`);
+        const data = await response.json();
+
+        if (data.error) {
+          document.getElementById("result").innerHTML = `<p style='color: red;'>${data.error}</p>`;
           return;
         }
 
-        try {
-          const response = await fetch(`${webAppURL}?orderId=${orderId}`);
-          const data = await response.json();
-          if (data.error) {
-            document.getElementById("result").innerText = data.error;
-            return;
-          }
+        // Fetch dropdown options
+        const dropdownData = await fetchDropdownValues();
 
-          const dropdownData = await fetchDropdownData();
+        document.getElementById("result").innerHTML = `
+          <p><b>Order ID:</b> ${data["ORDER ID"]}</p>
+          <p><b>Customer Name:</b> ${data["CUSTOMER NAME"] || "N/A"}</p>
+          <p><b>Address:</b> ${data["ADDRESS"] || "N/A"}</p>
 
-          document.getElementById("result").innerHTML = `
-            <p><b>Order ID:</b> ${data["ORDER ID"]}</p>
-            <p><b>Customer Name:</b> ${data["CUSTOMER NAME"]}</p>
-            <p><b>Address:</b> ${data["ADDRESS"]}</p>
-            <label for="agentName">Agent Name:</label>
-            <select id="agentName">
-              <option>${data["AGENT NAME"] || "Select"}</option>
-              ${dropdownData.agentNames.map(name => `<option>${name}</option>`).join('')}
-            </select>
-            <br>
-            <label for="agentRemark">Agent Remark:</label>
-            <select id="agentRemark">
-              <option>${data["AGENT REMARK 1"] || "Select"}</option>
-              ${dropdownData.agentRemarks.map(remark => `<option>${remark}</option>`).join('')}
-            </select>
-            <br>
-            <label for="attemptNumber">Attempt Number:</label>
-            <select id="attemptNumber">
-              <option>${data["ATEEMPT NUMBER"] || "Select"}</option>
-              ${dropdownData.attemptNumbers.map(number => `<option>${number}</option>`).join('')}
-            </select>
-            <br>
-            <button onclick="submitUpdate('${data["ORDER ID"]}')">Submit</button>
-          `;
-        } catch (error) {
-          alert("Error fetching order details.");
-          console.error(error);
-        }
+          <label for="agentName">Agent Name:</label>
+          <select id="agentName">
+            ${generateDropdownOptions(dropdownData.agentNames, data["AGENT NAME"])}
+          </select>
+
+          <label for="agentRemark">Agent Remark:</label>
+          <select id="agentRemark">
+            ${generateDropdownOptions(dropdownData.agentRemarks, data["AGENT REMARK 1"])}
+          </select>
+
+          <label for="attemptNumber">Attempt Number:</label>
+          <select id="attemptNumber">
+            ${generateDropdownOptions(dropdownData.attemptNumbers, data["ATEEMPT NUMBER"])}
+          </select>
+
+          <button onclick="submitUpdate('${data["ORDER ID"]}')">Submit</button>
+        `;
+      } catch (error) {
+        document.getElementById("result").innerHTML = "<p style='color: red;'>Error fetching order details.</p>";
+        console.error(error);
       }
+    }
 
-      async function fetchDropdownData() {
-        try {
-          const response = await fetch(`${webAppURL}?dropdown=true`);
-          return await response.json();
-        } catch (error) {
-          console.error("Error fetching dropdown values:", error);
-          return { agentNames: [], agentRemarks: [], attemptNumbers: [] };
-        }
+    function generateDropdownOptions(options, selectedValue) {
+      return options.map(option => `
+        <option value="${option}" ${selectedValue === option ? "selected" : ""}>${option}</option>
+      `).join('');
+    }
+
+    async function fetchDropdownValues() {
+      try {
+        const response = await fetch(`${webAppURL}?dropdown=true`);
+        return await response.json();
+      } catch (error) {
+        console.error("Error fetching dropdown values:", error);
+        return { agentNames: [], agentRemarks: [], attemptNumbers: [] };
       }
+    }
 
-      async function submitUpdate(orderId) {
-        const agentName = document.getElementById("agentName").value;
-        const agentRemark = document.getElementById("agentRemark").value;
-        const attemptNumber = document.getElementById("attemptNumber").value;
+    async function submitUpdate(orderId) {
+      const agentName = document.getElementById("agentName").value;
+      const agentRemark = document.getElementById("agentRemark").value;
+      const attemptNumber = document.getElementById("attemptNumber").value;
 
-        try {
-          const response = await fetch(webAppURL, {
-            method: "POST",
-            body: JSON.stringify({ orderId, agentName, agentRemark, attemptNumber }),
-          });
+      try {
+        const response = await fetch(webAppURL, {
+          method: "POST",
+          body: JSON.stringify({
+            orderId,
+            agentName,
+            agentRemark,
+            attemptNumber,
+          }),
+        });
 
-          const result = await response.json();
-          alert(result.success ? "Update successful!" : result.error);
-        } catch (error) {
-          alert("Error updating order details.");
-          console.error(error);
-        }
+        const result = await response.json();
+        alert(result.success ? "Update successful!" : result.error);
+      } catch (error) {
+        alert("Error updating order details.");
+        console.error(error);
       }
-    </script>
-  </body>
+    }
+  </script>
+</body>
 </html>
